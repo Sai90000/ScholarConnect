@@ -1,3 +1,4 @@
+import pandas as pd
 import requests
 
 
@@ -13,7 +14,7 @@ def get_authors(author_id):
     print(last_known_institution['country_code'])
 
     # filter by the same country and institution type
-    for page in range(1, 10):
+    for page in range(1, 25):
         url = f"https://api.openalex.org/authors?filter=concepts.id:{first_concept},concepts.id:{second_concept},concepts.id:{third_concept},last_known_institution.country_code:{last_known_institution['country_code']},last_known_institution.type:{last_known_institution['type']}&per-page=200&page={page}"
         r = requests.get(url)
         results = r.json()["results"]
