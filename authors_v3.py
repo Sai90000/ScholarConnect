@@ -133,7 +133,9 @@ def get_closest_author(author_id):
     print(closest_indices)
     print(df.iloc[closest_indices]["id"])
 
-    closest_author = df.iloc[closest_indices[1]]["id"]
+    closest_author_id = df.iloc[closest_indices[1]]["id"]
+    r = requests.get(f"https://api.openalex.org/authors/{closest_author_id}")
+    closest_author = r.json()
     return closest_author
 
 
