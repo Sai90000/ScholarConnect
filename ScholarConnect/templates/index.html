@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Nunito&display=swap');
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: inherit;
+      }
+
+      html {
+        font-size: 62.5%;
+        box-sizing: border-box;
+      }
+
+      body {    
+        font-family: 'Nunito', sans-serif;
+        font-weight: 400;
+        height: 100vh;
+        color: #333;
+        background-image: linear-gradient(to top left, #753682 0%, #bf2e34 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      header {
+        color: #fff;
+        text-align: center;
+        padding: 2px;
+      }
+
+      h1 {
+        font-family: 'Charmonman';
+        font-size: 30px;
+        margin-bottom: 2px;
+        position: relative;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+      }
+
+      label {
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      input[type="text"] {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+        width: 250px;
+        margin-bottom: 10px;
+      }
+
+      button[type="submit"] {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: rgb(0, 0, 0);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      /* LAYOUT */
+      main {
+        position: relative;
+        width: 125rem;
+        height: 68rem;
+        background-color: rgba(255, 255, 255, 0.35);
+        backdrop-filter: blur(200px);
+        filter: blur();
+        box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.25);
+        border-radius: 9px;
+        overflow: hidden;
+        display: flex;
+      }
+
+      .match_final_img{
+        display: none;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        top: 10%;
+        left: 25%
+      }
+
+      h2 {
+        font-family: 'Charmonman';
+        font-size: 30px;
+        position: relative;
+        top: 0%;
+        font-weight: bold;
+      }
+
+      .player {
+        flex: 50%;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: all 0.75s;
+        
+      }
+
+      /* ELEMENTS */
+      .name {
+        position: relative;
+        font-size: 4rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        word-spacing: 2px;
+        font-weight: 700;
+        margin-bottom: 1rem;
+      }
+
+      .score {
+        font-size: 6rem;
+        font-weight: 300;
+        color: #c7365f;
+        margin-bottom: auto;
+      }
+
+      .player--active {
+        background-color: rgba(255, 255, 255, 0.4);
+      }
+      .player--active .name {
+        font-weight: 700;
+      }
+      .player--active .score {
+        font-weight: 400;
+      }
+
+      .player--active .current {
+        opacity: 1;
+      }
+
+      .current {
+        background-color: #c7365f;
+        opacity: 0.8;
+        border-radius: 9px;
+        color: #fff;
+        width: 75%;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.75s;
+        justify-content: center;
+        align-items: center;
+        width: 500px;
+        height: 425px;
+      }
+
+      .current img {
+        height: 250px;
+        max-width: 75%;
+        max-height: 75%;
+        box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.2);
+        align-self: center;
+      }
+
+      .current-label {
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        font-size: 1.7rem;
+        color: #ddd;
+      }
+
+      .current-score {
+        font-size: 3.5rem;
+      }
+
+      /* ABSOLUTE POSITIONED ELEMENTS */
+      .btn {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #444;
+        background: none;
+        border: none;
+        font-family: inherit;
+        font-size: 1.8rem;
+        text-transform: uppercase;
+        cursor: pointer;
+        font-weight: 400;
+        transition: all 0.2s;
+
+        background-color: white;
+        background-color: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+
+        padding: 0.7rem 0.7rem;
+        border-radius: 25rem;
+        box-shadow: 0 1.75rem 3.5rem rgba(0, 0, 0, 0.1);
+      }
+
+      .btn::first-letter {
+        font-size: 2.4rem;
+        display: inline-block;
+        margin-right: 0.7rem;
+      }
+
+      .btn--new {
+        top: 4rem;
+      }
+      .btn--search {
+        top: 39.3rem;
+      }
+      .btn--hold {
+        top: 46.1rem;
+      }
+
+      .btn:active {
+        transform: translate(-50%, 3px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+      }
+
+      .btn:focus {
+        outline: none;
+      }
+
+      .dice {
+        position: absolute;
+        left: 50%;
+        top: 16.5rem;
+        transform: translateX(-50%);
+        height: 10rem;
+        box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.2);
+      }
+
+      .player--winner {
+        background-color: #2f2f2f;
+      }
+
+      .player--winner .name {
+        font-weight: 700;
+        color: #c7365f;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .row {
+        display: flex;
+      }
+    
+      .row input[type="text"] {
+        padding: 8px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        vertical-align: middle
+      }
+
+      .row button {
+        padding: 8px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-left: 8px;
+        vertical-align: middle
+      }
+
+    </style>
+    <title>ScholarConnect</title>
+  </head>
+  <body>
+    <header>
+      <h1>ScholarConnect</h1>
+    </header>
+    <main>
+      <section class="player player--0 player--active">
+        <h2 class="name" id="name--0">Input</h2>
+        <div class="row">
+          <input type="text", name="input_id", id="input_id", value="Give author ID">        
+        </div>
+        <p class="score" id="score--0">Name</p>
+        
+        <div class="current">
+          <img src="./static/default.jpg" alt="Playing dice" class="input_img" />
+          <p class="current-label">Current</p>
+          <p class="current-score" id="current--0">0</p>
+        </div>
+      </section>
+      <section class="player player--1">
+        <h2 class="name" id="name--1">Matched twin</h2>
+        <p class="score" id="score--1">24</p>
+        <div class="current">
+          <img src="./static/default.jpg", class="match_img" />
+          <img src="./static/default.jpg", class="match_final_img" />
+          <p class="current-label">Current</p>
+          <p class="current-score" id="current--1">0</p>
+        </div>
+      </section>
+
+      <button class="btn btn--new">🔄 New search</button>
+      <button class="btn btn--search">🎲 Run</button>
+      <button class="btn btn--hold">📥 Hold</button>
+    </main>
+    <script>
+      'use strict';
+
+      // Selecting elements
+      const player0El = document.querySelector('.player--0');
+      const player1El = document.querySelector('.player--1');
+      const score0El = document.querySelector('#score--0');
+
+      const score1El = document.getElementById('score--1');
+
+      const current0El = document.getElementById('current--0');
+      const current1El = document.getElementById('current--1');
+
+      const diceEl = document.querySelector('.dice');
+      const matchEL = document.querySelector('.match_img');
+      const match_finalEL = document.querySelector('.match_final_img');
+      const inptEL = document.querySelector('.input_img');;
+      
+      const btnNew = document.querySelector('.btn--new');
+      const btnSearch = document.querySelector('.btn--search');
+      const btnHold = document.querySelector('.btn--hold');
+
+      player0El.classList.add('player--active');
+      player1El.classList.add('player--active');
+
+      const getCookie=(name) => {
+        let cookieValue = null;
+        const cookies = document.cookie.split(';');
+      
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+      
+          if (cookie.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      
+        return cookieValue;
+      }
+      
+			const csrftoken = getCookie('csrftoken');
+
+      let scores, currentScore, activePlayer, playing;
+
+      // Starting conditions
+      const init = function () {
+        scores = [0, 0];
+        currentScore = 0;
+        activePlayer = 0;
+        playing = true;
+
+        score0El.textContent = 0;
+        score1El.textContent = 0;
+        current0El.textContent = 0;
+        current1El.textContent = 0;
+
+        inptEL.classList.add('hidden');
+        //matchEL.classList.add('hidden');
+        player0El.classList.remove('player--winner');
+        player1El.classList.remove('player--winner');
+        player0El.classList.add('player--active');
+        player1El.classList.remove('player--active');
+      };
+      init();
+
+      const switchPlayer = function () {
+        document.getElementById(`current--${activePlayer}`).textContent = 0;
+        currentScore = 0;
+        activePlayer = activePlayer === 0 ? 1 : 0;
+        player0El.classList.toggle('player--active');
+        player1El.classList.toggle('player--active');
+
+      };
+
+      function changeImage() {
+        var img_url = Math.trunc(Math.random() * 11) + 1;
+        matchEL.src = `./static/dummy/${img_url}.png`;
+      }
+
+      function beforeSending(){
+          matchEL.classList.remove('hidden');
+
+          // Generating a random input image roll
+          const dice = Math.trunc(Math.random() * 9) + 1;
+                    
+          // Call the changeImage function every n milliseconds
+          const intervalId = setInterval(changeImage, 50);
+          
+      }
+      beforeSending()
+
+      function afterSending(){
+        // Display input image
+        inptEL.classList.remove('hidden');
+        inptEL.src = `./static/input/${dice}.png`;
+      }
+      // make a request to api functionality
+      btnSearch.addEventListener('click', function () {
+          $.ajax({					
+            type: 'GET',
+            url: '/get_api/',
+            //TO DO: not the safest you need to get the POST	
+            /*beforeSend: function() {
+              beforeSending();
+            },*/
+
+            data: {
+              //'csrfmiddlewaretoken': csrftoken,
+              'input_search_id': document.getElementById("input_id").value
+            },
+            success: function(response){
+              //clearInterval(intervalId);
+              current0El.textContent = response['input']['type']
+              score0El.classList.remove('hidden')
+              score0El.textContent = response['input']['name']
+
+              current1El.textContent = response['output']['type']
+              score1El.classList.remove('hidden')
+              score1El.textContent = response['output']['name']
+
+              console.log('success');
+              console.log(response);
+              inptEL.classList.remove('hidden')
+              setTimeout(()=>{
+                matchEL.classList.add('hidden');
+              }
+              ,1000)
+              match_finalEL.style.display = 'flex';
+            },
+
+            error: function(error){
+              console.log('error', error)
+            }})
+      });
+		
+      btnHold.addEventListener('click', function () {
+        if (playing) {
+          // 1. Add current score to active player's score
+          scores[activePlayer] += currentScore;
+          // scores[1] = scores[1] + currentScore
+
+          document.getElementById(`score--${activePlayer}`).textContent =
+            scores[activePlayer];
+
+          // 2. Check if player's score is >= 100
+          if (scores[activePlayer] >= 100) {
+            // Finish the game
+            playing = false;
+            diceEl.classList.add('hidden');
+
+            document
+              .querySelector(`.player--${activePlayer}`)
+              .classList.add('player--winner');
+            document
+              .querySelector(`.player--${activePlayer}`)
+              .classList.remove('player--active');
+          } else {
+            // Switch to the next player
+            switchPlayer();
+          }
+        }
+      });
+
+      btnNew.addEventListener('click', init);
+
+
+      //document.getElementById("next_step").addEventListener("click", initializeData);
+    </script>
+
+  </body>
+</html>

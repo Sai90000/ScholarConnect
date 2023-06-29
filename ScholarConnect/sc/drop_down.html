@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style type="text/css">
+    .floating-container {
+      position: fixed;
+    }
+    
+    .button1 {
+      top: 50px;
+      left: 10px;
+    }
+    
+    .button2 {
+      top: 100px;
+      right: 10px;
+    }</style>
+</head>
+<body>
+    <label for="numberInput">Enter a number:</label>
+    <input type="number" id="numberInput" onchange="updateDropdownOptions()">
+
+    <label for="dropdownSelect">Select an option:</label>
+    <select id="dropdownSelect"></select>
+    <div class="floating-container">
+      <div class="dropdowns">
+        <!-- Dropdowns go here -->
+      </div>
+      <div class="buttons">
+        <button id="button1" class="floating-button">Button 1</button>
+        <button id="button2" class="floating-button">Button 2</button>
+        <!-- Add more buttons as needed -->
+      </div>
+    </div>
+    <div class="content">
+      <!-- Page content goes here -->
+    </div>
+    
+</body>
+</html>
+
+
+<script>
+function updateDropdownOptions() {
+  // Get the number input value
+  var numberInput = document.getElementById("numberInput");
+  var selectedNumber = parseInt(numberInput.value);
+
+  // Get the dropdown select element
+  var dropdownSelect = document.getElementById("dropdownSelect");
+
+  // Clear existing options
+  dropdownSelect.innerHTML = "";
+
+  // Generate new options based on the selected number
+  for (var i = 1; i <= selectedNumber; i++) {
+    var option = document.createElement("option");
+    option.value = i;
+    option.text = i;
+    dropdownSelect.appendChild(option);
+  }
+}
+var dataframe = [
+  { radiusX: 30, radiusY: 20, color: "red" },
+  { radiusX: 40, radiusY: 25, color: "blue" },
+  // more data...
+];
+
+// Create SVG container
+var svg = d3.select("body")
+  .append("svg")
+  .attr("width", 500)
+  .attr("height", 500);
+
+// Bind data to ellipses
+var ellipses = svg.selectAll("ellipse")
+  .data(dataframe);
+
+// Enter new ellipses
+ellipses.enter()
+  .append("ellipse")
+  .merge(ellipses) // Update existing ellipses
+
+  // Set attributes of the ellipses
+  .attr("cx", function(d, i) { return (i + 1) * 50; }) // Example x-position calculation
+  .attr("cy", 50)
+  .attr("rx", function(d) { return d.radiusX; })
+  .attr("ry", function(d) { return d.radiusY; })
+  .attr("fill", function(d) { return d.color; });
+
+// Remove any extra ellipses
+ellipses.exit().remove();
+// Sample data
+var data = [
+  { x: 10, y: 20, title: "Data Point 1" },
+  { x: 30, y: 40, title: "Data Point 2" },
+  { x: 50, y: 60, title: "Data Point 3" },
+  // Add more data points...
+];
+
+// Create an SVG container
+var svg = d3.select("body")
+  .append("svg")
+  .attr("width", 500)
+  .attr("height", 500);
+
+// Create the scatter plot circles
+var circles = svg.selectAll("circle")
+  .data(data)
+  .enter()
+  .append("circle")
+  .attr("cx", function(d) { return d.x; })
+  .attr("cy", function(d) { return d.y; })
+  .attr("r", 5)
+  .style("fill", "steelblue");
+
+// Add titles to the scatter plot circles
+circles.append("title")
+  .text(function(d) { return d.title; });
+
+var svg = d3.select("body")
+.append("svg")
+.attr("width", 500)
+.attr("height", 500);
+
+// Draw the circle
+svg.append("circle")
+  .attr("cx", 250)
+  .attr("cy", 250)
+  .attr("r", 50)
+  .style("fill", "none")
+  .style("stroke", "black");
+</script>
