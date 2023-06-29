@@ -119,7 +119,7 @@ def get_closest_author(author_id):
     x_concept_dist = build_concept_list(df)
 
     # person compared
-    person_row = x_concept_dist[0]  # Example: using the first row
+    person_row = x_concept_dist[0]
 
     # result
     closest_rows, distances, closest_indices = find_closest_rows(
