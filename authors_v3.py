@@ -113,14 +113,13 @@ def find_closest_rows(matrix, person_row, num_closest=10):
     return closest_rows, distances, closest_indices
 
 
-if __name__ == "__main__":
-    author = author_to_compare("A2794320938")
+def get_closest_author(author_id):
+    author = author_to_compare(author_id)
     df = build_dataframe(author)
     x_concept_dist = build_concept_list(df)
 
     # person compared
     person_row = x_concept_dist[0]  # Example: using the first row
-    print(df.iloc[0]["id"])
 
     # result
     closest_rows, distances, closest_indices = find_closest_rows(
@@ -133,3 +132,10 @@ if __name__ == "__main__":
     print("Indices:")
     print(closest_indices)
     print(df.iloc[closest_indices]["id"])
+
+    closest_author = df.iloc[closest_indices[1]]["id"]
+    return closest_author
+
+
+if __name__ == "__main__":
+    print(get_closest_author("A2794320938"))
