@@ -1,0 +1,891 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Synthetic market visualization</title>
+		<script type="text/javascript" src="{%static 'js/d3.js'%}"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+		<style type="text/css">
+			/* No style rules here yet */
+				* {
+				  box-sizing: border-box;
+				}
+				
+				/* Create three equal columns that floats next to each other */
+				.column {
+				  float: left;
+				  width: 33.33%;
+				  padding: 10px;				  
+				}
+				
+				/* Clear floats after the columns */
+				.row:after {
+				  content: "";
+				  display: table;
+				  clear: both;
+				}
+
+				.button {
+					border: none;
+					color: white;
+					padding: 8px 20px;
+					text-align: center;
+					text-decoration: none;
+					display: inline-block;
+					font-size: 16px;
+					margin: 4px 2px;
+					transition-duration: 0.4s;
+					cursor: pointer;
+					border-radius: 4px;
+					
+				  }
+				  
+				  .button {
+					background-color: white; 
+					color: black; 
+					border: 2px solid #000000;
+				  }
+				  
+				  .button:hover {
+					background-color:  white;
+					color: black;
+				  }
+				#next_step{
+					position: fixed;
+					top: 50px;
+					right: 10px;
+				}
+				#init_radius{
+					position: fixed;
+					top: 100px;
+					right: 10px;
+				}
+				#market_run{
+					position: fixed;
+					top: 150px;
+					right: 10px;
+				}
+				#calibrate{
+					position: fixed;
+					top: 200px;
+					right: 10px;
+				}
+				#selection{
+					position: fixed;
+					bottom: 50px;
+					right: 10px
+				}
+				
+				#duration_ids{
+					position: fixed;
+					right: 10px;
+				}
+				#market_ids{
+					position: fixed;
+					right: 10px;
+				}
+				.not-visible{
+					display: none;
+				}
+		</style>
+	</head>
+	<body>
+		{% block content%}
+			<h1> Synthetic market</h1>
+			<form action="check" method='post'>
+				{% csrf_token %}
+				<!--
+				<div class="row">
+					<div class="column">
+						value_r_lower_range: <input type="text", name="value_r_lower_range", value="0.333"><br>
+						value_r_higher_range: <input type="text", name="value_r_higher_range", value="0.667"><br>
+						sigma: <input type="text", name="sigma", value="0.1"><br>
+						init_cash: <input type="text", name="init_cash", value="25"><br>
+						lambda_value: <input type="text", name="lambda_value", value="0.4"><br>
+					</div>
+					<div class="column">
+						market_duration: <input type="text", name="market_duration", value="75"><br>
+						liquidity_constant: <input type="text", name="liquidity_constant", value="50"><br>
+						init_price: <input type="text", name="init_price", value="0.4254"><br>
+						percent: <input type="text", name="percent", value="0.0088"><br>
+					</div>
+					<div class="column">
+						number_generations: <input type="text", name="number_generations", id="number_generations", value="5"><br>
+						no_of_agents_per_market: <input type="text", name="no_of_agents_per_market", value="7"><br>
+						retain_top_k_agents_per_market: <input type="text", name="retain_top_k_agents_per_market", value="6"><br>
+						top_agents_n: <input type="text", name="top_agents_n", value="6"><br>
+					</div>
+				</div>
+				<div class="row"><input type="submit", value="Submit Config", id="config_submit"></div>
+				-->
+			</form>
+		{%endblock%}
+		<div class="row">
+			num_samples: 
+			<br>
+			<input type="'text", name="num_samples", id="num_samples", value="25">
+			<br>
+			<button class="button button1", id="create_data">create data</button>
+		</div>
+		<div class="row">
+			<p id="current_step"></p>
+			<br>
+			<p id="next_step_p"></p>
+			<br>
+			<p id="msg"></p>
+		</div>
+		<div class="row">
+		<button class="button button1" , id="next_step">Initialize data</button>
+		<button class="button button1" , id="init_radius">Get initial radius</button>
+		<button class="button button1" , id="market_run">Run market</button>
+		<button class="button button1" , id="calibrate">Calibrate</button>
+		<button class="button button1" , id="run_test">Run test</button>
+		
+		</div>
+		<div id="spinner-box">
+			<div class="spinner-grow" role="status"></div>
+			
+
+		<label>
+			<div id="selection">
+				Market:
+				<select id="market_ids"><option value=0>0</option></select>
+				<br>
+				Time: 
+				<select id="duration_ids"><option value=0>0</option></select>
+				<br>
+				Generation: 
+				<select id="generation_ids"><option value=0>0</option></select>
+			</div>
+		</label>
+
+
+		<script type="text/javascript">
+			// create the drop down items as per config
+			function updateDropdownOptions(elem_id, nums) {
+				// Get the number input value
+				var selectedNumber = nums;
+			  
+				// Get the dropdown select element
+				var dropdownSelect = document.getElementById(elem_id);
+			  
+				// Clear existing options
+				dropdownSelect.innerHTML = "";
+			  
+				// Generate new options based on the selected number
+				for (var i = 0; i < selectedNumber; i++) {
+				  var option = document.createElement("option");
+				  option.value = i;
+				  option.text = i;
+				  dropdownSelect.appendChild(option);
+				}
+			  }
+			
+			// get the cookies for making ajax posts securely
+			function getCookie(name) {
+				let cookieValue = null;
+				if (document.cookie && document.cookie !== '') {
+					const cookies = document.cookie.split(';');
+					for (let i = 0; i < cookies.length; i++) {
+						const cookie = cookies[i].trim();
+						// Does this cookie string begin with the name we want?
+						if (cookie.substring(0, name.length + 1) === (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+				return cookieValue;
+			}
+			const csrftoken = getCookie('csrftoken');
+
+			// define color maps for different labels
+			let color = d3
+						.scaleOrdinal()
+						.domain([
+							0,
+							1
+							])
+						.range(
+							["#009900", "#E2071C"]);
+			
+			// create initial data and plot it
+			function initializeData() {	
+				$.ajax({					
+					type: 'POST',
+					url: '/check/init-data/',	
+					data: {
+						'csrfmiddlewaretoken': csrftoken,
+						'num_samples': document.getElementById("num_samples").value
+					},				
+					success: function(response){
+						document.getElementById("create_data").classList.add("spinner-box");
+						document.getElementById("current_step").innerHTML = "Current step:".concat(response['current']);
+						document.getElementById("next_step_p").innerHTML = "Next step:".concat(response['next_step']);
+						if (response['event_type'] == 'init') {
+							console.log(response)
+							create_init_plot(resp_data=response)
+						}
+						else if (response['event_type'] == 'features') {
+							create_features_plot(resp_data=response)
+						}
+						else {
+							market_run_plot(resp_data=response)
+						}
+						
+					},
+					error: function(error){
+						document.getElementById("msg").innerHTML = error;
+						console.log('error', error)
+					}
+					
+				})
+			  }
+			
+			// see the initialization range of agent radius
+			function postInitiRadius() {
+				$.ajax({					
+					type: 'POST',
+					url: '/check/init-radius/',	
+					data: {
+						'csrfmiddlewaretoken': csrftoken,
+						'num_samples': document.getElementById("num_samples").value
+					},				
+					success: function(response){
+						document.getElementById("create_data").classList.add("spinner-box");
+						document.getElementById("current_step").innerHTML = "Current step:".concat(response['current']);
+						document.getElementById("next_step_p").innerHTML = "Next step:".concat(response['next_step']);
+						updateDropdownOptions('market_ids', response['markets']);
+						updateDropdownOptions('generation_ids', response['generations']);
+						updateDropdownOptions('duration_ids', response['durations']);
+						create_features_plot(resp_data=response);	
+					},
+					error: function(error){
+						document.getElementById("msg").innerHTML = error;
+						console.log('error', error)
+					}					
+				})
+			}
+			
+
+			function postcalibration(){
+			$.ajax({					
+				type: 'POST',
+				url: '/check/calibrate/',	
+				data: {
+					'csrfmiddlewaretoken': csrftoken,
+					'num_samples': document.getElementById("num_samples").value
+				},				
+				success: function(response){
+					document.getElementById("create_data").classList.add("spinner-box");
+					document.getElementById("current_step").innerHTML = "Current step:".concat(response['current']);
+					document.getElementById("next_step_p").innerHTML = "Next step:".concat(response['next_step']);
+					
+					create_features_plot(resp_data=response)
+
+					
+				},
+				error: function(error){
+					document.getElementById("msg").innerHTML = error;
+					console.log('error', error)
+				}	
+			})
+			}
+
+			function postMarketRun() {
+				var marketSelect = document.getElementById("market_ids");
+				var genSelect = document.getElementById("generation_ids");
+				var durationSelect = document.getElementById("duration_ids");
+				
+				// Get the selected value
+				var mrktValue = marketSelect.value;
+				var genValue = genSelect.value;
+				var durationValue = durationSelect.value
+				console.log('genValue: ', genValue)
+				console.log('mrktValue: ', mrktValue)
+				console.log('durationValue: ', durationValue)
+				$.ajax({					
+					type: 'POST',
+					url: '/check/market_run/',
+					data: {
+						'csrfmiddlewaretoken': csrftoken,
+						'gen': genValue,
+						'duration': durationValue,
+						'market': mrktValue
+					},				
+					success: function(response){
+						document.getElementById("create_data").classList.add("spinner-box");
+						document.getElementById("current_step").innerHTML = "Current step:".concat(response['current']);
+						document.getElementById("next_step_p").innerHTML = "Next step:".concat(response['next_step']);
+
+						market_run_plot(resp_data=response)						
+					},
+					error: function(error){
+						document.getElementById("msg").innerHTML = error;
+						console.log('error', error)
+					}					
+				})
+			}
+			function get_init_radius() {
+			
+			$.ajax({					
+				type: 'POST',
+				url: '/check/init-radius/',	
+				data: {
+					'csrfmiddlewaretoken': csrftoken,
+					'num_samples': document.getElementById("num_samples").value
+				},				
+				success: function(response){
+					response = response
+					//document.getElementById("current_step").innerHTML = "Current step:".concat(response['id']).concat(response['name']);
+					
+				},
+				error: function(error){
+					document.getElementById("msg").innerHTML = error;
+					console.log('error', error)
+				}
+				
+			})
+			}
+
+			function get_stream_data(){
+			$.ajax({
+				type: 'POST',
+				url: '/check/stream/',
+				data: {
+					'csrfmiddlewaretoken': csrftoken
+				},
+				success: function(response){
+					console.log(response)
+				},
+				error: function(error){
+					console.log('error', error)
+				}
+
+
+			})
+			}
+		
+		document.getElementById("next_step").addEventListener("click", initializeData);
+		document.getElementById("init_radius").addEventListener("click", postInitiRadius);
+		document.getElementById("market_run").addEventListener("click", postMarketRun);
+
+		document.getElementById("calibrate").addEventListener("click", postcalibration);
+		document.getElementById("create_data").addEventListener("click", get_stream_data);
+
+			function create_star(centerX, centerY){
+				// Define the star shape parameters
+				var innerRadius = 3; // Radius of the inner points of the star
+				var outerRadius = 9; // Radius of the outer points of the star
+				var numPoints = 5; // Number of points on the star
+
+				// Calculate the angle between points
+				var angle = (Math.PI * 2) / numPoints;
+
+				// Generate the path data for the star
+				var starPath = "";
+					for (var i = 0; i < numPoints * 2; i++) {
+					var radius = i % 2 === 0 ? outerRadius : innerRadius;
+					var x = centerX + Math.cos(i * angle) * radius;
+					var y = centerY + Math.sin(i * angle) * radius;
+					if (i === 0) {
+						starPath += "M" + x + "," + y + " ";
+					} else {
+						starPath += "L" + x + "," + y + " ";
+					}
+				}
+				starPath += "Z"; // Close the path
+				return starPath
+				// Draw the star
+
+			}
+
+			
+
+			function create_init_plot(resp_data){
+					//Width and height
+					var w = 900;
+					var h = 900;
+					var padding = 50;
+					plot_data = resp_data['plot_data']
+					console.log(plot_data)
+					//Create scale functions
+					var xScale = d3.scaleLinear()
+					.domain([d3.min(plot_data, function(d) { return d['x']; }), d3.max(plot_data, function(d) { return d['x']; })])
+					.range([padding, w - padding * 2]);
+
+					var yScale = d3.scaleLinear()
+										.domain([d3.min(plot_data, function(d) { return d['y']; }), d3.max(plot_data, function(d) { return d['y']; })])
+										.range([h - padding, padding]);
+
+					//Define X axis
+					var xAxis = d3.axisBottom()
+									.scale(xScale)
+									.ticks(5);
+
+					//Define Y axis
+					var yAxis = d3.axisLeft()
+									.scale(yScale)
+									.ticks(5);
+
+					//Create SVG element
+					var svg = d3.select("body")
+								.append("svg")
+								.attr("width", w)
+								.attr("height", h);
+					
+					var c_center_data = JSON.parse(JSON.stringify(plot_data))
+					
+					//Create circle centers
+					var circle_centers = svg.selectAll("circle.center")
+						.data(c_center_data)
+						.enter()
+						.append("circle")
+						.attr("cx", function(d) {	
+								return xScale(d['x']);
+						})
+						.attr("cy", function(d) {
+								return yScale(d['y']);
+						})
+						.attr("r", 10)
+						.attr("fill", function (d) {	
+								return color(d['label']);
+							});
+					
+					//Create X axis
+					svg.append("g")
+						.attr("class", "x axis")
+						.attr("transform", "translate(0," + (h - padding) + ")")
+						.call(xAxis);
+					
+					//Create Y axis
+					svg.append("g")
+						.attr("class", "y axis")
+						.attr("transform", "translate(" + padding + ",0)")
+						.call(yAxis);
+			
+			}
+			
+			function create_features_plot(resp_data){
+				//Width and height
+				var w = 900;
+				var h = 900;
+				var padding = 50;
+				var plot_data = resp_data['plot_data']
+				//Create scale functions
+				var xScale = d3.scaleLinear()
+									.domain([d3.min(plot_data, function(d) { return d['x']; }), d3.max(plot_data, function(d) { return d['x']; })])
+									.range([padding, w - padding]);
+
+				var yScale = d3.scaleLinear()
+									.domain([d3.min(plot_data, function(d) { return d['y']; }), d3.max(plot_data, function(d) { return d['y']; })])
+									.range([h - padding, padding]);
+
+				//Define X axis
+				var xAxis = d3.axisBottom()
+								.scale(xScale)
+								.ticks(15);
+
+				//Define Y axis
+				var yAxis = d3.axisLeft()
+								.scale(yScale)
+								.ticks(15);
+
+				//Create SVG element
+				var svg = d3.select("body")
+							.append("svg")
+							.attr("width", w)
+							.attr("height", h);
+				
+
+				var c_min_data = JSON.parse(JSON.stringify(plot_data))
+				/*
+				//Create min circles
+				var circle_mins = svg.selectAll("circle.mins")
+					.data(c_min_data)
+					.enter()
+					.append("circle")
+					.attr("cx", function(d) {
+							return xScale(d['x']);
+					})
+					.attr("cy", function(d) {
+							return yScale(d['y']);
+					})
+					.attr("r", function (d) {	
+						return Math.floor(Math.abs(d['min_rad']*10));
+					})
+					.attr("fill", function (d) {	
+							return "#110EEF";
+
+						})
+					.attr("opacity", 0.25);
+				*/
+				//Create min ellipses
+				var ellipses_mins = svg.selectAll("ellipse.mins")
+					.data(c_min_data)
+					.enter()
+					.append("ellipse")
+					.attr("cx", function(d) {
+							return xScale(d['x']);
+					})
+					.attr("cy", function(d) {
+							return yScale(d['y']);
+					})
+					.attr("rx", function (d) {	
+						return xScale(d['x'] + d['min_rad']) - xScale(d['x']);
+					})
+					.attr("ry", function (d) {
+						return yScale(d['y'] + d['min_rad']) - yScale(d['y']);
+					})
+					.attr("fill", function (d) {
+							console.log('inside color min rad')	
+							return "#110EEF";
+						})
+					.attr("opacity", 0.05)
+					//.attr("stroke", "black")
+					.attr("stroke-opacity", 1);
+
+				var c_center_data = JSON.parse(JSON.stringify(plot_data))
+
+				//Create circle centers
+				var circle_centers = svg.selectAll("circle.center")
+					.data(c_center_data)
+					.enter()
+					.append("circle")
+					.attr("cx", function(d) {	
+							return xScale(d['x']);
+					})
+					.attr("cy", function(d) {
+							return yScale(d['y']);
+					})
+					.attr("r", 5)
+					.attr("fill", function (d) {	
+							return color(d['label']);
+						});
+				/*
+					//Create max circles
+				var circle_maxs = svg.selectAll("circle.max")
+					.data(plot_data)
+					.enter()
+					.append("circle")
+					.attr("cx", function(d) {
+							return xScale(d['x']);
+					})
+					.attr("cy", function(d) {
+							return yScale(d['y']);
+					})
+					.attr("r", function (d) {	
+						return Math.floor(Math.abs(d['weight']*10));
+					})
+					.attr("fill", function (d) {
+							console.log('inside market_run_plot')
+							return color(d['label']);
+						})
+					.attr("opacity", 0.15)
+					.attr("stroke", "black") 
+					.attr("stroke-width", 1);
+					//.attr("stroke-opacity", 1);
+				*/
+				
+				//Create max ellipses
+				var ellipses_maxs = svg.selectAll("ellipse.maxs")
+					.data(plot_data)
+					.enter()
+					.append("ellipse")
+					.attr("cx", function(d) {
+							return xScale(d['x']);
+					})
+					.attr("cy", function(d) {
+							return yScale(d['y']);
+					})
+					.attr("rx", function (d) {	
+						console.log(d);
+						console.log('x will be ', d['x']);
+						console.log('max rad will be ', d['max_rad']);
+						console.log('scaled rad point ', xScale(d['x'] + d['max_rad']));
+						console.log('scaled x is ', xScale(d['x']));
+						return xScale(d['x'] + d['max_rad']) - xScale(d['x']);
+					})
+					.attr("ry", function (d) {
+						return yScale(d['y'] + d['max_rad']) - yScale(d['y']);
+					})
+					.attr("fill", function (d) {
+							console.log('inside color create_features_plot')	
+							return color(d['label']);
+						})
+					.attr("opacity", 0.05)
+					//.attr("stroke", "black")
+					.attr("stroke-opacity", 1)
+					.style("stroke", "black")
+					.style("stroke-dasharray", "4, 4");
+				
+				//Create X axis
+				svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + (h - padding) + ")")
+					.call(xAxis);
+				
+				//Create Y axis
+				svg.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + padding + ",0)")
+					.call(yAxis);
+				
+
+				// add grid
+				d3.select('#grid').append('svg')
+					.attr('width', w)
+					.attr('height', h)
+					.append('g')
+					.attr('transform', 'translate(' + padding + ',' + padding + ')');
+		
+		}
+		
+			function market_run_plot(resp_data){
+				//Width and height
+				var w = 900;
+				var h = 900;
+				var padding = 50;
+				var plot_data = resp_data['plot_data']
+				//Create scale functions
+				var xScale = d3.scaleLinear()
+									.domain([d3.min(plot_data, function(d) { return d['x']; }), d3.max(plot_data, function(d) { return d['x']; })])
+									.range([padding, w - padding * 2]);
+
+				var yScale = d3.scaleLinear()
+									.domain([d3.min(plot_data, function(d) { return d['y']; }), d3.max(plot_data, function(d) { return d['y']; })])
+									.range([h - padding, padding]);
+
+				//Define X axis
+				var xAxis = d3.axisBottom()
+								.scale(xScale)
+								.ticks(5);
+
+				//Define Y axis
+				var yAxis = d3.axisLeft()
+								.scale(yScale)
+								.ticks(5);
+
+				//Create SVG element
+				var svg = d3.select("body")
+							.append("svg")
+							.attr("width", w)
+							.attr("height", h);		
+
+				
+
+				
+				//Create agent centers
+				var c_center_data = JSON.parse(JSON.stringify(plot_data))
+				var circle_centers = svg.selectAll("circle.center")
+					.data(c_center_data)
+					.enter()
+					.append("circle")
+					.attr("cx", function(d) {	
+							return xScale(d['x']);
+					})
+					.attr("cy", function(d) {
+							return yScale(d['y']);
+					})
+					.attr("r", 5)
+					.attr("fill", function (d) {	
+							return color(d['agent_buy_positive']);
+						});
+						
+
+				var agent_radii = JSON.parse(JSON.stringify(plot_data))
+				var agent_ellipses = svg.selectAll("ellipse.agnts")
+					.data(plot_data)
+					.enter()
+					.append("ellipse")
+					.attr("cx", function(d) {
+							return xScale(d['x']);
+					})
+					.attr("cy", function(d) {
+							return yScale(d['y']);
+					})
+					.attr("rx", function (d) {	
+						console.log('**********************')
+						console.log(d.id)
+						console.log("rx is ", Math.floor(Math.abs(xScale(d['x'] + d['x_rad']) - xScale(d['x']))))
+						return Math.floor(Math.abs(xScale(d['x'] + d['x_rad']) - xScale(d['x'])));
+					})
+					.attr("ry", function (d) {
+						console.log("ry is ", Math.floor(Math.abs(yScale(d['y'] + d['y_rad']) - yScale(d['y']))))
+						return Math.floor(Math.abs(yScale(d['y'] + d['y_rad']) - yScale(d['y'])));
+					})
+					.attr("fill", function (d) {
+							console.log('inside color min rad')	
+							console.log(plot_data.indexOf(d))
+							return color(d['agent_buy_positive']);
+						})
+					.attr("opacity", 0.05)
+					.style("stroke", "black");
+
+				//Create star corresponding to active market
+				svg.append("path")
+					.attr("d", create_star(centerX=xScale(resp_data['market_info']['x']), 
+											centerY=yScale(resp_data['market_info']['y'])
+											))
+					.attr("fill", color(resp_data['market_info']['label']))
+					.style("stroke", "black")
+					.style("stroke-width", 2);
+				
+				//Also give an option to hover over to know the value seen by an agent
+				// Create tooltips
+				var tooltip = d3.select("body")
+					.append("div")
+					.attr("class", "tooltip")
+					.style("opacity", 0);
+				
+				console.log('check')
+
+				//Add event handling
+				agent_ellipses.on("click", function(d) {
+					tooltip.transition()
+						.duration(200)
+						.style("opacity", 0.9);
+					tooltip.html(`Agent: ${d['agent']} 
+								Val: ${(d['estimate']).toFixed(4)}`)
+						.style("right", (d3.event.pageX + 10) + "px")
+						.style("top", (d3.event.pageY - 10) + "px")
+						.style("position", "absolute")
+						.style("font-size", "12px") ;
+					})
+					.on("mousemove", function(d) {
+						tooltip.style("left", (d3.event.pageX + 10) + "px")
+						  .style("top", (d3.event.pageY - 10) + "px");
+					  })
+					.on("mouseout", function(d) {
+					tooltip.transition()
+						.duration(200)
+						.style("opacity", 0);
+					})
+					tooltip.call(wrapText, 100);
+				
+				//Create X axis
+				svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + (h - padding) + ")")
+					.call(xAxis);
+				
+				//Create Y axis
+				svg.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + padding + ",0)")
+					.call(yAxis);
+				
+				// Get the selected value
+				var mrktValue = document.getElementById("market_ids").value;
+				var genValue = document.getElementById("generation_ids").value;
+				var durationValue = document.getElementById("duration_ids").value
+				svg.append("text")
+					.attr("x", 300) // Set the x-coordinate for the title
+					.attr("y", 30)  // Set the y-coordinate for the title
+					.attr("text-anchor", "middle") // Set the text anchor to the middle
+					.attr("font-size", "20px") // Set the font size of the title
+					.text("Value estimate plot for Market: " + mrktValue + " at Duration: " + durationValue + " for Generation: " + genValue); // Set the text content of the title
+		
+		}
+		function wrapText(text, width) {
+			text.each(function() {
+			  var text = d3.select(this);
+			  var words = text.text().split(/\s+/).reverse();
+			  var lineHeight = 1.1; // Adjust the line height based on your needs
+			  var y = text.attr("y");
+			  var dy = parseFloat(text.attr("dy"));
+			  var tspan = text.text(null)
+				.append("tspan")
+				.attr("x", 0)
+				.attr("y", y)
+				.attr("dy", dy + "em");
+			  var line = [];
+			  var word = words.pop();
+			  while (word) {
+				line.push(word);
+				tspan.text(line.join(" "));
+				if (tspan.node().getComputedTextLength() > width && line.length > 1) {
+				  line.pop();
+				  tspan.text(line.join(" "));
+				  line = [word];
+				  tspan = text.append("tspan")
+					.attr("x", 0)
+					.attr("y", y)
+					.attr("dy", lineHeight + dy + "em")
+					.text(word);
+				}
+				word = words.pop();
+			  }
+			});}
+			
+		function displayMsg() {
+			$.ajax({					
+				type: 'GET',
+				url: '/check/hello-world/',					
+				success: function(response){
+					document.getElementById("msg").innerHTML = response.text;
+				},
+				error: function(error){
+					console.log('error', error)
+				}
+			})
+		  }
+			//On click, update with new data			
+			d3.select("butto121n")
+				.on("click", function() {
+					//New values for dataset
+					var numValues = dataset.length;						 		//Count original length of dataset
+					var maxRange = Math.random() * 1000;						//Max range of new values
+					dataset = [];  						 				 		//Initialize empty array
+					for (var i = 0; i < numValues; i++) {				 		//Loop numValues times
+						var newNumber1 = Math.floor(Math.random() * maxRange);	//New random integer
+						var newNumber2 = Math.floor(Math.random() * maxRange);	//New random integer
+						dataset.push([newNumber1, newNumber2]);					//Add new number to array
+					}
+					
+					//Update scale domains
+					xScale.domain([0, d3.max(dataset, function(d) { return d[0]; })]);
+					yScale.domain([0, d3.max(dataset, function(d) { return d[1]; })]);
+
+					//Update all circles
+					svg.selectAll("circle")
+					   .data(dataset)
+					   .transition()
+					   .duration(1000)
+					   .on("start", function() {
+						   d3.select(this)
+						     .attr("fill", "magenta")
+						     .attr("r", 7);
+					   })
+					   .attr("cx", function(d) {
+					   		return xScale(d[0]);
+					   })
+					   .attr("cy", function(d) {
+					   		return yScale(d[1]);
+					   })
+					   .transition()
+					   .duration(1000)
+					   .attr("fill", "black")
+					   .attr("r", 2);
+
+					//Update X axis
+					svg.select(".x.axis")
+				    	.transition()
+				    	.duration(1000)
+						.call(xAxis);
+					
+					//Update Y axis
+					svg.select(".y.axis")
+				    	.transition()
+				    	.duration(1000)
+						.call(yAxis);
+
+				});
+
+
+		</script>
+	</body>
+</html>
