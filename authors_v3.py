@@ -10,8 +10,8 @@ def author_to_compare(author_id):
 
 
 def build_dataframe(author):
-    records = []
-    concept_ids = [concept["id"] for concept in author["x_concepts"][:2]]
+    records = [author]
+    concept_ids = [concept["id"] for concept in author["x_concepts"][:5]]
     country_code = (
         author["last_known_institution"]["country_code"]
         if author["last_known_institution"]
@@ -40,8 +40,10 @@ def build_dataframe(author):
         )
         r = requests.get(url)
         results = r.json()["results"]
+        total_results = r.json()["meta"]["count"]
         for result in results:
             records.append(result)
+    print(f"Total results is {total_results}")
 
     return pd.DataFrame.from_records(records)
 
@@ -112,7 +114,7 @@ def find_closest_rows(matrix, person_row, num_closest=10):
 
 
 if __name__ == "__main__":
-    author = author_to_compare("A3096150370")
+    author = author_to_compare("A2794320938")
     df = build_dataframe(author)
     x_concept_dist = build_concept_list(df)
 
