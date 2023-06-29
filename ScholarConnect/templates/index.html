@@ -96,9 +96,9 @@
         align-items: center;
         justify-content: center;
         position: relative;
-        top: 10%;
         left: 25%
       }
+
 
       h2 {
         font-family: 'Charmonman';
@@ -296,8 +296,9 @@
         
         <div class="current">
           <img src="./static/default.jpg" alt="Playing dice" class="input_img" />
-          <p class="current-label">Current</p>
-          <p class="current-score" id="current--0">0</p>
+          <p class="current-label">Concepts</p>
+          <p class="current-score" id="current--0" style="font-size: 16px">Concepts</p>
+          <p class="concepts-original"></p>
         </div>
       </section>
       <section class="player player--1">
@@ -306,14 +307,14 @@
         <div class="current">
           <img src="./static/default.jpg", class="match_img" />
           <img src="./static/default.jpg", class="match_final_img" />
-          <p class="current-label">Current</p>
-          <p class="current-score" id="current--1">0</p>
+          </br>
+          <p class="current-label">Concepts</p>
+          <p class="current-score" id="current--1" style="font-size: 16px">Concepts</p>
         </div>
       </section>
 
       <button class="btn btn--new">🔄 New search</button>
       <button class="btn btn--search">🎲 Run</button>
-      <button class="btn btn--hold">📥 Hold</button>
     </main>
     <script>
       'use strict';
@@ -409,8 +410,18 @@
 
       function afterSending(){
         // Display input image
+        const i_dice = Math.trunc(Math.random() * 9) + 1;
         inptEL.classList.remove('hidden');
-        inptEL.src = `./static/input/${dice}.png`;
+        inptEL.src = `./static/input/${i_dice}.png`;
+
+      }
+
+      function changeFinal_img(){
+
+        const o_dice = Math.trunc(Math.random() * 9) + 1;
+        match_finalEL.classList.remove('hidden');
+        match_finalEL.src = `./static/dummy/${o_dice}.png`;
+
       }
       // make a request to api functionality
       btnSearch.addEventListener('click', function () {
@@ -427,12 +438,15 @@
               'input_search_id': document.getElementById("input_id").value
             },
             success: function(response){
+              afterSending()
+              // hide input_id
+              document.getElementById("input_id").classList.add('hidden');
               //clearInterval(intervalId);
-              current0El.textContent = response['input']['type']
+              current0El.textContent = response['input']['concepts']
               score0El.classList.remove('hidden')
               score0El.textContent = response['input']['name']
 
-              current1El.textContent = response['output']['type']
+              current1El.textContent = response['output']['concepts']
               score1El.classList.remove('hidden')
               score1El.textContent = response['output']['name']
 
@@ -444,6 +458,7 @@
               }
               ,1000)
               match_finalEL.style.display = 'flex';
+              changeFinal_img();
             },
 
             error: function(error){

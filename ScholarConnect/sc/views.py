@@ -16,16 +16,24 @@ def get_api(request):
     input_request = request.GET.get('input_search_id')
     json_output = get_closest_author(input_request)
     json_input = get_author_details(input_request)
+    output_concepts_string = ""
+    for concept in json_output['x_concepts'][:5]:
+        output_concepts_string += f"{concept['display_name']} ({concept['score']}), "
+    input_concepts_string = ""
+    for concept in json_input['x_concepts'][:5]:
+        input_concepts_string += f"{concept['display_name']} ({concept['score']}), "
     
     return JsonResponse({'output':{'name': json_output['display_name'],
                          'country': json_output['last_known_institution']['country_code'],
                          'hidx': json_output['summary_stats']['h_index'],
-                         'type': json_output['last_known_institution']['type']
+                         'type': json_output['last_known_institution']['type'],
+                                   'concepts': output_concepts_string,
                             },
                         'input':{'name': json_input['display_name'],
                          'country': json_input['last_known_institution']['country_code'],
                          'hidx': json_input['summary_stats']['h_index'],
-                         'type': json_input['last_known_institution']['type']
+                         'type': json_input['last_known_institution']['type'],
+                                 'concepts': input_concepts_string,
                             },
                          })
 
